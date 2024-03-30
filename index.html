@@ -1,1 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scratch Card</title>
+<style>
+* {
+   box-sizing: border-box;
+}
 
+body {
+   margin: 0;
+   padding: 0;
+   font-family: Arial, sans-serif;
+   background-color: #f2f2f2;
+}
+
+.scratch-card {
+   width: 300px;
+   margin: 50px auto;
+   background-color: #fff;
+   border-radius: 10px;
+   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+   overflow: hidden;
+}
+
+.scratch-area {
+   width: 100%;
+   height: 200px;
+   position: relative;
+}
+
+.canvas {
+   width: 100%;
+   height: 100%;
+   position: absolute;
+   top: 0;
+   left: 0;
+}
+
+.prize {
+   padding: 20px;
+   text-align: center;
+   display: none;
+}
+
+.prize h2 {
+   color: #ff9900;
+}
+
+.prize p {
+   color: #333;
+}
+</style>
+</head>
+<body>
+
+<div class="scratch-card">
+   <div class="scratch-area">
+      <canvas class="canvas"></canvas>
+   </div>
+   <div class="prize">
+      <h2>恭喜您中奖了！</h2>
+      <p>您获得了一份大奖！</p>
+   </div>
+</div>
+
+<script>
+const canvas = document.querySelector('.canvas');
+const ctx = canvas.getContext('2d');
+const prize = document.querySelector('.prize');
+let isScratching = false;
+
+canvas.width = canvas.clientWidth;
+canvas.height = canvas.clientHeight;
+
+ctx.fillStyle = '#777';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.globalCompositeOperation = 'destination-out';
+
+canvas.addEventListener('mousedown', handleScratchStart);
+canvas.addEventListener('touchstart', handleScratchStart);
+
+function handleScratchStart(event) {
+   isScratching = true;
+
+   canvas.addEventListener('mousemove', handleScratchMove);
+   canvas.addEventListener('touchmove', handleScratchMove);
+
+   canvas.addEventListener('mouseup', handleScratchEnd);
+   canvas.addEventListener('touchend', handleScratchEnd);
+
+   handleScratchMove(event);
+}
+
+function handleScratchMove(event) {
+   if (!isScratching) return;
+
+   const rect = canvas.getBoundingClientRect();
+   let x, y;
+   if (event.type === 'touchmove') {
+      x = event.touches[0].clientX - rect.left;
+      y = event.touches[0].clientY - rect.top;
+   } else {
+      x = event.clientX - rect.left;
+      y = event.clientY - rect.top;
+   }
+
+   ctx.beginPath();
+   ctx.arc(x, y, 16, 0, Math.PI * 2);
+   ctx.fill();
+}
+
+function handleScratchEnd() {
+   isScratching = false;
+
+   canvas.removeEventListener('mousemove', handleScratchMove);
+   canvas.removeEventListener('touchmove', handleScratchMove);
+
+   if (checkComplete()) {
+      prize.style.display = 'block';
+   }
+}
+
+function checkComplete() {
+   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+   const data = imageData.data;
+
+   for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] !== 0) {
+         return false;
+      }
+   }
+
+   return true;
+}
+</script>
+
+</body>
+</html>
